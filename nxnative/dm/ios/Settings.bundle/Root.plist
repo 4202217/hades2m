@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>StringsTable</key>
+	<string>Root</string>
+	<key>Title</key>
+	<string>settings_title</string>
+	<key>PreferenceSpecifiers</key>
+	<array>
+		<!-- Picture. The tier is an absolute 16:9 canvas; front_ios.m keeps it 16:9 and fits it to a narrower panel.
+		     Only 16:9 canvases exist here on purpose: the game's HUD anchors to the canvas' top-left and is not
+		     shifted, so a wider canvas puts the left column under the Dynamic Island (docs/research/c1-fullpanel-20261022.md). -->
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>group_picture</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Key</key>
+			<string>DmResTier</string>
+			<key>Title</key>
+			<string>res_title</string>
+			<key>DefaultValue</key>
+			<integer>4</integer>
+			<key>Values</key>
+			<array>
+				<integer>0</integer>
+				<integer>1</integer>
+				<integer>2</integer>
+				<integer>3</integer>
+				<integer>4</integer>
+				<integer>5</integer>
+			</array>
+			<key>Titles</key>
+			<array>
+				<string>res_0</string>
+				<string>res_1</string>
+				<string>res_2</string>
+				<string>res_3</string>
+				<string>res_4</string>
+				<string>res_5</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>res_footer</string>
+		</dict>
+		<!-- Fill the screen: the canvas takes the panel's own aspect instead of 16:9, so a 4:3 iPad loses its top and bottom bars.
+		     Only meaningful on a panel narrower than 16:9; the switch is ignored elsewhere (front_ios.m fill_screen_wanted).
+		     The default here is on -- an iPad is the only device that shows this switch's effect, and it is what the iPad should do;
+		     a panel wider than 16:9 stays 16:9 whatever the switch says. -->
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Key</key>
+			<string>DmFillScreen</string>
+			<key>Title</key>
+			<string>fill_title</string>
+			<key>DefaultValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>fill_footer</string>
+		</dict>
+
+		<!-- Virtual gamepad -->
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>group_pad</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Key</key>
+			<string>DmPadGlass</string>
+			<key>Title</key>
+			<string>glass_title</string>
+			<key>DefaultValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>glass_footer</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Key</key>
+			<string>DmPadHaptic</string>
+			<key>Title</key>
+			<string>pad_haptic_title</string>
+			<key>DefaultValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>pad_haptic_footer</string>
+		</dict>
+
+		<!-- Haptics -->
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>group_haptics</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Key</key>
+			<string>DmHaptics</string>
+			<key>Title</key>
+			<string>haptics_title</string>
+			<key>DefaultValue</key>
+			<true/>
+		</dict>
+		<!-- A list, not a PSSliderSpecifier: a slider shows no number, so the player cannot tell what strength they picked. -->
+		<dict>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Key</key>
+			<string>DmHapticGain</string>
+			<key>Title</key>
+			<string>haptic_gain_title</string>
+			<key>DefaultValue</key>
+			<integer>3</integer>
+			<key>Values</key>
+			<array>
+				<integer>0</integer>
+				<integer>1</integer>
+				<integer>2</integer>
+				<integer>3</integer>
+				<integer>4</integer>
+				<integer>5</integer>
+				<integer>6</integer>
+				<integer>7</integer>
+				<integer>8</integer>
+				<integer>9</integer>
+				<integer>10</integer>
+			</array>
+			<key>Titles</key>
+			<array>
+				<string>gain_0</string>
+				<string>gain_1</string>
+				<string>gain_2</string>
+				<string>gain_3</string>
+				<string>gain_4</string>
+				<string>gain_5</string>
+				<string>gain_6</string>
+				<string>gain_7</string>
+				<string>gain_8</string>
+				<string>gain_9</string>
+				<string>gain_10</string>
+			</array>
+		</dict>
+			<dict>
+				<key>Type</key>
+				<string>PSGroupSpecifier</string>
+				<key>Title</key>
+				<string>haptics_footer</string>
+			</dict>
+		</array>
+</dict>
+</plist>

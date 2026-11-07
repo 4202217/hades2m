@@ -1,0 +1,33 @@
+# 开源仓库不包含的内容
+#
+# 注意前导 /：只锚定仓库根，不会误伤任意层级的同名目录
+# （/docs/ 只忽略根 docs/，nxnative/docs/ 这类上游文档不受影响）。
+
+# 用户自带（游戏本体与密钥，一键出包的输入）
+/games/
+/keys/
+
+# 本机工具链与 Python 环境（可重建：brew install … / python3 -m venv）
+/tools/
+/venv/
+/.venv/
+
+# 可重构产物与本地运行数据（一键出包会在 games/<id>_build/ 下重建全部中间物）
+/work/
+
+# 开发期文档与决策账本（本地保留，不入公开仓库）
+/docs/
+/.audit/
+/survey/
+
+# 机器本地配置与会话状态（签名/设备配置样例见 device-example.env）
+/.claude/
+/.zcode/
+nxnative/dm/ios/local.env
+device-*.env
+!device-example.env
+
+# 系统与 Python 杂物（任意层级）
+.DS_Store
+__pycache__/
+*.pyc

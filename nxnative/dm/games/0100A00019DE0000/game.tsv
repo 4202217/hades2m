@@ -1,0 +1,94 @@
+# 哈迪斯 II（Hades II，Switch，基础版 v0 + 更新 1.0.137848 = v589824）的游戏档案。移植中
+# Game profile of Hades II (Switch, base game v0 + update 1.0.137848 = v589824). In bring-up
+# 格式见 dm/games/README.md | Format: see dm/games/README.md
+# Supergiant Games 自研引擎（Lua 脚本 + 自制资源包 Packages/NVN/*.pkg、GR2/_Optimized/*.gpk），SDK 20.5.15，NVN；模块 main + sdk（没有 subsdk）。
+# 运行时用 nn::ro 加载 /nro/EOSSDK-Switch-Shipping.nro（Epic 在线服务），宿主的 hle_ro.c 不装 NRO（SDK 19 起的 LoadModule 多一个 bool，那个形式也接管了）。
+# Supergiant's in-house engine (Lua scripting, its own Packages/NVN/*.pkg and GR2/_Optimized/*.gpk resource packs), SDK 20.5.15, NVN; modules main + sdk (no subsdk).
+# nn::ro loads /nro/EOSSDK-Switch-Shipping.nro (Epic Online Services) at run time; the host's hle_ro.c does not load NROs (the SDK 19 LoadModule form with the extra bool is taken over too).
+
+# ---- 身份 | Identity ----
+title_id	0100A00019DE0000
+program_id	0100A00019DE0000
+
+# ---- App ----
+# 游戏名：只给档案列表与 Mac 窗口标题当标签；iOS App 名取基础版 NSP 里的游戏名，包名按基础版标题号（build_ipa.sh / NSP 脚本）
+# Game name: only a label for profile listings and the Mac window title; the iOS app name is the game name in the base NSP, and the bundle ID comes from the base game title ID (build_ipa.sh / NSP script)
+name	Hades II
+ipa	HadesII.ipa
+app_category	public.app-category.action-games
+# 右摇杆用来瞄准：Game/Weapons/PlayerWeapons.sjson 里 6 个武器带 ManualAiming = true（12 处 ShowFreeAimLine = true），
+# 其中就有玩家常带的宙斯法杖投掷（WeaponAnywhereCast）。2D 布局没有右摇杆，这些武器没法瞄。
+# The right stick aims: 6 weapons carry ManualAiming = true in Game/Weapons/PlayerWeapons.sjson (12 ShowFreeAimLine = true), among them the Zeus staff cast the player uses. The 2D layout has no right stick, so those weapons cannot be aimed.
+pad_layout	full
+
+# ---- 版本 | Versions ----
+# 基础版与更新 1.0.137848 的构建号；rtld 由宿主替代，不登记 | build IDs of the base game and of update 1.0.137848; rtld is replaced by the host and is not registered
+build	v0	0.0.126424	main=5219053e5eb156be80fbb2f303779531	sdk=d83a56a5558798414c78ec722867a7da
+build	v589824	1.0.137848	main=8ce1ac48e9fa74479051f3520e632df4	sdk=190030518b5d64e5d87b84bc54661af9
+package	v589824
+shader_versions	v589824
+
+# ---- 文件 | Files ----
+modules	main sdk
+romfs_marker	Scripts/AchievementData.lua
+# 已经压过的格式：包、音频、影片、贴图容器 | already-compressed formats: resource packs, audio, movies, texture containers
+zip_store	.pkg:.gpk:.fsb:.bank:.bik:.bik_atlas:.sdb:.xnb:.nro:.nrr
+
+# ---- 内存 | Memory ----
+# NPDM 不声明系统资源：先用旷野之息（同样是 SDK 20）的分区（块 4 GB = 前置 256 MB + 别名区 256 MB + 栈区 256 MB + 堆区 3.25 GB），实测后再定
+# The NPDM declares no system resource: starts from Breath of the Wild's partition (also SDK 20): 4 GB block = 256 MB in front + 256 MB alias region + 256 MB stack region + 3.25 GB heap region, to be measured
+mem_reserve	0x100000000
+mem_alias	0x10000000
+mem_stack	0x10000000
+app_pool	0xCD500000
+# 引擎按「总内存 − 已用」向内核要堆（QueryMemoryInfo → SetMemoryHeapSize），主模块 106 MB 远超宿主默认的 64 MB 估值，
+# 报出来的可用内存会多 41 MB 而被 SetHeapSize 拦下（起机即中止）。本作按模块真实体积报已用内存（见 docs/agents/03 的 Metroid Dread 同款）
+# The engine sizes its heap as (total - used) (QueryMemoryInfo → SetMemoryHeapSize): with the host's 64 MB stand-in and 106 MB of modules the reported free memory is 41 MB too much and SetHeapSize stops boot.
+# This title reports used memory as the modules' real footprint (see the Metroid Dread entry in docs/agents/03)
+mem_used_image	on
+
+# 静态预排布贴图的源页回收（nvn_mtl.m）：已上传为 GPU 私有副本后，把 guest 内存池里已死的源页还给系统（MAP_FIXED 换零页 + 移出驻留集）。
+# 质量无损；环境变量 DM_TEX_RECLAIM / DM_TEX_RECLAIM_DRYRUN 覆盖档案值（device 验证周期先跑 dryrun）。
+# Reclaim the guest source pages of static packaged textures once a GPU-private copy exists (nvn_mtl.m): dead source pages are returned to
+# the system (MAP_FIXED zero-fill + residency removal). Quality-neutral; env DM_TEX_RECLAIM / DM_TEX_RECLAIM_DRYRUN override the profile.
+tex_reclaim	on
+
+# D1：池 Finalize 时把池的整页换成新的匿名页（内容拷回），Metal 才能放掉死掉的零拷贝缓冲（nvn_mtl.m mtl_pool_del）。
+# 每次「进存档 → 退出游戏」原本净增约 119 个死缓冲 / 174 MB 显存且永不回落。环境变量 DM_POOL_RENEW=0 关掉（出问题时先用它排除），
+# =2 只给测量用（换页但不拷回，池会被清零）。只在堆里、且不和活池内存重叠的池才会换。
+# D1: on pool Finalize the pool's interior pages are replaced with fresh anonymous pages (bytes copied back) so Metal can free the dead
+# zero-copy buffer (nvn_mtl.m mtl_pool_del); each "enter save -> quit to menu" used to leave ~119 dead buffers / 174 MB for good.
+# DM_POOL_RENEW=0 turns it off; =2 is measurement only (renew without copying, the pool is zeroed). Heap pages only, never a page a live pool covers.
+pool_renew	on
+
+# ---- UI 绘制签名（宿主把屏幕空间 UI 整体平移时用） | UI draw signature (the host shifts the whole screen-space UI with it) ----
+# 留空 = 本作还没有认出 HUD 的绘制类，宿主退回旧的 "4 顶点/2 属性/20 字节" 判据（本作全是索引绘制，那个判据永远不成立，
+# 也就是"不平移"）。曾经填过帧首 5 个通道的 b9c900eb，**已推翻**：无条件丢掉它（DM_NVN_SKIP_FS=b9c900eb）后
+# HUD 一个像素都不变，静止的暂停面板也不变；当初"丢它 HUD 就消失"是 HUD 自动淡出造成的假阳性（对照组同一秒也消失）。
+# 平移机制本身已验证可用（16:9 下逐像素无变化）。**按位置认绘制的那条路已经做出来了**（nvn_mtl.m 的
+# ui_draw_ndc / ui_safe_dir，开关 DM_UI_SAFEAUTO），血条、左列技能图标、金币会跟着右移，但文字（血量数字、
+# 资源计数、计时器）不动，个别图标还会错位——停在那里，原因与入口见 §4.6。这里留空即可：这两个键只服务
+# 按着色器 key 的老判据，本作不适用。
+# Empty = the HUD's draw class has not been identified for this game, and the host keeps the old "4 verts / 2 attrs / 20-byte"
+# test (every draw here is indexed, so that test never fires: the UI is not shifted). The first five passes' b9c900eb was tried
+# and **retracted**: dropping it unconditionally (DM_NVN_SKIP_FS=b9c900eb) leaves the HUD pixel-identical, and the static pause
+# panel does not change either. Position-based identification was implemented instead (ui_draw_ndc / ui_safe_dir,
+# DM_UI_SAFEAUTO): bars, the left skill column and the coin icon move, but text does not and some icons land off; see §4.6.
+# These two keys only serve the old shader-key test and stay empty for this title.
+ui_fs_key
+ui_vs_key
+
+# ---- NVN 驱动常量段（dmsh_build.py 出包、nvn_mtl.m 运行时现填） | NVN driver constant segments (dmsh_build.py at packaging, nvn_mtl.m filled at run time) ----
+# 先沿用马力欧的，按全库着色器实测后再定 | Mario's values until measured over all shaders
+nvn_tex_base	0x20
+nvn_tex_slots	32
+nvn_samp_base	0x568
+nvn_img_base	0x120
+nvn_img_slots	8
+nvn_ssbo_bases	vs=0x110 ps=0x510 cs=0x310
+
+# ---- 着色器拆分（shader_split.py） | Shader split (shader_split.py) ----
+# RomFS 里 /Shaders/NVN/bin/*.vert 与 *.frag 就是 BNSH 本体（40 像素 + 15 顶点），不是打包的 .bfsha
+# The /Shaders/NVN/bin/*.vert and *.frag files in the RomFS are the BNSH sections themselves (40 pixel + 15 vertex), not packed .bfsha files
+shader_groups	/Shaders/NVN/=shader
+shader_note	哈迪斯 II 着色器
